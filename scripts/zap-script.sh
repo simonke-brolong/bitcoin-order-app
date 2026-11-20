@@ -1,6 +1,14 @@
 #!/bin/bash
+set -eu
 
-docker pull zaproxy/zap-stable
-docker run -i zaproxy/zap-stable zap-baseline.py -t "https://kenken64.github.io/bitcoin-order-app/" -l PASS > zap_baseline_report.html
+report_dir="$(mktemp -d)"
+chmod a+wx "$report_dir"
 
-echo $? > /dev/null
+docker run --rm -v "$report_dir:/zap/wrk:rw" \
+  ghcr.io/zaproxy/zaproxy:stable \
+  zap-baseline.py \
+  -t "https://simonke-brolong.github.io/bitcoin-order-app/" \
+  -r zap_baseline_report.html -I
+
+test -s "$report_dir/zap_baseline_report.html"
+cp "$report_dir/zap_baseline_report.html" ./zap_baseline_report.html
